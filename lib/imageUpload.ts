@@ -72,3 +72,35 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     img.src = src;
   });
 }
+
+export async function uploadImageFiles(files: FileList | File[]): Promise<string[]> {
+  const list = Array.from(files);
+  if (list.length === 0) return [];
+
+  const formData = new FormData();
+  for (const file of list) {
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Only image files can be uploaded.');
+    }
+    formData.append('images', file);
+  }
+
+  const res = await fetch('/api/images', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    let message = 'Could not upload image.';
+    try {
+      const body = (await res.json()) as { error?: string };
+      if (body.error) message = body.error;
+    } catch {
+      // Keep the generic message.
+    }
+    throw new Error(message);
+  }
+
+  const body = (await res.json()) as { urls: string[] };
+  return body.urls;
+}

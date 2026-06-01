@@ -9,16 +9,17 @@ import FlybyWindow from '@/components/FlybyWindow';
 import {
   CountdownConfig,
   DEFAULT_CONFIG,
+  fetchConfig,
   isoToLocalInput,
   loadConfig,
   localInputToIso,
   saveConfig,
 } from '@/lib/config';
-import { fileToDataUrl } from '@/lib/imageUpload';
+import { uploadImageFiles } from '@/lib/imageUpload';
 
 function formatSaveError(err: unknown) {
   return err instanceof Error
-    ? `Could not save: ${err.message}. Try removing a few uploaded images.`
+    ? `Could not save: ${err.message}.`
     : 'Could not save changes.';
 }
 
@@ -34,13 +35,30 @@ export default function AdminPage() {
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const backgroundAutosaveReadyRef = useRef(false);
 
-  // Hydrate from localStorage
+  // Hydrate from the shared server config, with local cache as an instant fallback.
   useEffect(() => {
-    const cfg = loadConfig();
-    setDraft(cfg);
-    setHydrated(true);
-    // If admin password is empty, skip the lock
-    if (!cfg.adminPassword) setUnlocked(true);
+    let cancelled = false;
+    const cached = loadConfig();
+    setDraft(cached);
+
+    fetchConfig()
+      .then((cfg) => {
+        if (cancelled) return;
+        setDraft(cfg);
+        // If admin password is empty, skip the lock
+        if (!cfg.adminPassword) setUnlocked(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        if (!cached.adminPassword) setUnlocked(true);
+      })
+      .finally(() => {
+        if (!cancelled) setHydrated(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Background changes are visually applied immediately in admin, so persist
@@ -53,16 +71,9 @@ export default function AdminPage() {
       return;
     }
 
-    try {
-      saveConfig({
-        ...loadConfig(),
-        backgroundImages: draft.backgroundImages,
-        backgroundIntervalMs: draft.backgroundIntervalMs,
-      });
-      setUploadError('');
-    } catch (err) {
-      setUploadError(formatSaveError(err));
-    }
+    saveConfig(draft)
+      .then(() => setUploadError(''))
+      .catch((err) => setUploadError(formatSaveError(err)));
   }, [draft.backgroundImages, draft.backgroundIntervalMs, hydrated]);
 
   const update = <K extends keyof CountdownConfig>(
@@ -70,9 +81,9 @@ export default function AdminPage() {
     value: CountdownConfig[K],
   ) => setDraft((d) => ({ ...d, [key]: value }));
 
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
-      saveConfig(draft);
+      await saveConfig(draft);
       setSavedFlash(true);
       setUploadError('');
       setTimeout(() => setSavedFlash(false), 1800);
@@ -82,10 +93,17 @@ export default function AdminPage() {
     }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (!confirm('Reset all countdown settings to defaults?')) return;
     setDraft(DEFAULT_CONFIG);
-    saveConfig(DEFAULT_CONFIG);
+    try {
+      await saveConfig(DEFAULT_CONFIG);
+      setSavedFlash(true);
+      setUploadError('');
+      setTimeout(() => setSavedFlash(false), 1800);
+    } catch (err) {
+      setUploadError(formatSaveError(err));
+    }
   };
 
   const addImage = () => update('backgroundImages', [...draft.backgroundImages, '']);
@@ -106,12 +124,10 @@ export default function AdminPage() {
     setUploading(true);
     setUploadError('');
     try {
-      const dataUrls = await Promise.all(
-        Array.from(files).map((f) => fileToDataUrl(f)),
-      );
+      const uploadedUrls = await uploadImageFiles(files);
       setDraft((d) => ({
         ...d,
-        backgroundImages: [...d.backgroundImages, ...dataUrls],
+        backgroundImages: [...d.backgroundImages, ...uploadedUrls],
       }));
     } catch (err) {
       setUploadError(
@@ -128,11 +144,11 @@ export default function AdminPage() {
     setUploading(true);
     setUploadError('');
     try {
-      const dataUrl = await fileToDataUrl(file);
+      const [uploadedUrl] = await uploadImageFiles([file]);
       setDraft((d) => ({
         ...d,
         backgroundImages: d.backgroundImages.map((v, idx) =>
-          idx === i ? dataUrl : v,
+          idx === i ? uploadedUrl : v,
         ),
       }));
     } catch (err) {
@@ -463,15 +479,15 @@ export default function AdminPage() {
             </div>
             <p className="text-white/60 text-sm mb-3 font-serif italic">
               Upload photos from your device, paste any image URL, or drag-and-drop
-              images right onto this card. They save automatically and cross-fade
-              behind the countdown.
+              images right onto this card. Uploaded images are stored on the
+              server, shared with everyone, and cross-fade behind the countdown.
             </p>
             {uploadError && (
               <div className="text-rose-glow text-sm mb-3">{uploadError}</div>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {draft.backgroundImages.map((url, i) => {
-                const isUploaded = url.startsWith('data:');
+                const isUploaded = url.startsWith('data:') || url.startsWith('/uploads/');
                 return (
                   <div key={i} className="glass-soft rounded-2xl p-3 flex flex-col gap-3">
                     <div
@@ -544,7 +560,8 @@ export default function AdminPage() {
           <section className="glass rounded-3xl p-6 md:p-8 md:col-span-2">
             <h2 className="font-display text-2xl mb-1">Security</h2>
             <p className="text-white/60 text-sm mb-5 font-serif italic">
-              Light protection — the admin password is stored in your browser.
+              Light protection — the admin password is stored with the shared
+              countdown settings.
             </p>
             <div className="max-w-md">
               <label className="label">Admin password</label>
@@ -562,7 +579,7 @@ export default function AdminPage() {
         <div className="sticky bottom-5 mt-10 flex justify-center">
           <div className="glass rounded-full px-3 py-2 flex items-center gap-3">
             <span className="text-xs text-white/65 px-2 hidden sm:inline">
-              {savedFlash ? 'All saved ♥' : 'Changes are local to this device.'}
+              {savedFlash ? 'All saved ♥' : 'Changes are shared for everyone.'}
             </span>
             <button onClick={handleReset} className="btn-ghost text-xs uppercase tracking-[0.3em]">
               Reset

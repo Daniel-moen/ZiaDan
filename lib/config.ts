@@ -75,11 +75,47 @@ export function loadConfig(): CountdownConfig {
   }
 }
 
-export function saveConfig(config: CountdownConfig): void {
+function cacheConfig(config: CountdownConfig): void {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
   // Broadcast so the home page picks up changes live.
   window.dispatchEvent(new CustomEvent('ziadan:config', { detail: config }));
+}
+
+export async function fetchConfig(): Promise<CountdownConfig> {
+  if (typeof window === 'undefined') return DEFAULT_CONFIG;
+  try {
+    const res = await fetch('/api/config', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Config request failed.');
+    const config = (await res.json()) as CountdownConfig;
+    cacheConfig(config);
+    return config;
+  } catch {
+    return loadConfig();
+  }
+}
+
+export async function saveConfig(config: CountdownConfig): Promise<void> {
+  if (typeof window === 'undefined') return;
+  const res = await fetch('/api/config', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config),
+  });
+
+  if (!res.ok) {
+    let message = 'Server save failed.';
+    try {
+      const body = (await res.json()) as { error?: string };
+      if (body.error) message = body.error;
+    } catch {
+      // Keep the generic message.
+    }
+    throw new Error(message);
+  }
+
+  const saved = (await res.json()) as CountdownConfig;
+  cacheConfig(saved);
 }
 
 export type TimeParts = {

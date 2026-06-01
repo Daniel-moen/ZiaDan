@@ -20,6 +20,18 @@ body {
   overflow-x: hidden;
 }
 
+.background-carousel-image {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+@media (max-width: 640px) {
+  .background-carousel-image {
+    background-size: contain;
+  }
+}
+
 /* Glassy card */
 .glass {
   background: linear-gradient(

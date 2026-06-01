@@ -38,13 +38,22 @@ export default function BackgroundCarousel({ images, intervalMs = 9000 }: Props)
             exit={{ opacity: 0, scale: 1.02 }}
             transition={{ duration: 2.2, ease: 'easeInOut' }}
             className="absolute inset-0"
-            style={{
-              backgroundImage: `url(${current})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: 'saturate(115%) contrast(105%)',
-            }}
-          />
+          >
+            <div
+              className="absolute inset-0 bg-cover bg-center blur-2xl scale-110 opacity-70 md:hidden"
+              style={{
+                backgroundImage: `url(${current})`,
+                filter: 'saturate(115%) contrast(105%)',
+              }}
+            />
+            <div
+              className="background-carousel-image absolute inset-0"
+              style={{
+                backgroundImage: `url(${current})`,
+                filter: 'saturate(115%) contrast(105%)',
+              }}
+            />
+          </motion.div>
         ) : null}
       </AnimatePresence>
 
