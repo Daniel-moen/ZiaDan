@@ -15,7 +15,7 @@ export default function BackgroundCarousel({ images, intervalMs = 9000 }: Props)
   useEffect(() => {
     if (safeImages.length <= 1) return;
     const id = setInterval(() => {
-      setIndex((i) => (i + 1) % safeImages.length);
+      setIndex((currentIndex) => getRandomNextIndex(currentIndex, safeImages.length));
     }, intervalMs);
     return () => clearInterval(id);
   }, [safeImages.length, intervalMs]);
@@ -62,4 +62,15 @@ export default function BackgroundCarousel({ images, intervalMs = 9000 }: Props)
       <div className="absolute inset-0 pointer-events-none vignette" />
     </div>
   );
+}
+
+function getRandomNextIndex(currentIndex: number, length: number) {
+  if (length <= 1) return 0;
+
+  let nextIndex = currentIndex;
+  while (nextIndex === currentIndex) {
+    nextIndex = Math.floor(Math.random() * length);
+  }
+
+  return nextIndex;
 }
