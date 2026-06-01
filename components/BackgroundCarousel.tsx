@@ -43,14 +43,14 @@ export default function BackgroundCarousel({ images, intervalMs = 9000 }: Props)
               className="absolute inset-0 bg-cover bg-center blur-2xl scale-110 opacity-70 md:hidden"
               style={{
                 backgroundImage: `url(${JSON.stringify(current)})`,
-                filter: 'saturate(115%) contrast(105%)',
+                filter: 'brightness(88%) saturate(115%) contrast(105%)',
               }}
             />
             <div
               className="background-carousel-image absolute inset-0"
               style={{
                 backgroundImage: `url(${JSON.stringify(current)})`,
-                filter: 'saturate(115%) contrast(105%)',
+                filter: 'brightness(88%) saturate(115%) contrast(105%)',
               }}
             />
           </motion.div>
