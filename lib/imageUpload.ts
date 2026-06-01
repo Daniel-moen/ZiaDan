@@ -1,9 +1,7 @@
-// Convert an uploaded image File into a compressed JPEG data URL.
+// Convert uploaded image files into display-friendly images before upload.
 //
-// localStorage is limited (~5MB across the whole app on most browsers), so we
-// downscale very large photos and re-encode them as JPEG. This keeps multiple
-// background images well within budget while still looking great as a
-// full-screen background.
+// Very large photos are downscaled and re-encoded as JPEG so they upload faster
+// and display consistently as full-screen backgrounds.
 
 export type ImageToDataUrlOptions = {
   maxDimension?: number; // longest side, in CSS pixels
@@ -78,7 +76,7 @@ export async function uploadImageFiles(files: FileList | File[]): Promise<string
   if (list.length === 0) return [];
 
   const formData = new FormData();
-  for (const file of list) {
+  for (const file of await Promise.all(list.map(prepareImageForUpload))) {
     if (!file.type.startsWith('image/')) {
       throw new Error('Only image files can be uploaded.');
     }
@@ -103,4 +101,39 @@ export async function uploadImageFiles(files: FileList | File[]): Promise<string
 
   const body = (await res.json()) as { urls: string[] };
   return body.urls;
+}
+
+async function prepareImageForUpload(file: File): Promise<File> {
+  if (file.type === 'image/svg+xml') return file;
+
+  try {
+    const dataUrl = await fileToDataUrl(file);
+    const blob = await (await fetch(dataUrl)).blob();
+    const type = blob.type || 'image/jpeg';
+
+    return new File([blob], replaceImageExtension(file.name, extensionForType(type)), {
+      lastModified: Date.now(),
+      type,
+    });
+  } catch {
+    return file;
+  }
+}
+
+function replaceImageExtension(name: string, extension: string): string {
+  const base = name.replace(/\.[^.]+$/, '') || 'upload';
+  return `${base}.${extension}`;
+}
+
+function extensionForType(type: string): string {
+  switch (type) {
+    case 'image/png':
+      return 'png';
+    case 'image/webp':
+      return 'webp';
+    case 'image/svg+xml':
+      return 'svg';
+    default:
+      return 'jpg';
+  }
 }

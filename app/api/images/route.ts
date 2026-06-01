@@ -4,11 +4,12 @@ import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
-
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
+const UPLOAD_DIR = path.join(/*turbopackIgnore: true*/ process.cwd(), 'data', 'uploads');
 const MIME_EXTENSIONS: Record<string, string> = {
   'image/avif': 'avif',
   'image/gif': 'gif',
+  'image/heic': 'heic',
+  'image/heif': 'heif',
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/svg+xml': 'svg',
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
         const filepath = path.join(UPLOAD_DIR, filename);
         const bytes = Buffer.from(await file.arrayBuffer());
         await fs.writeFile(filepath, bytes);
-        return `/uploads/${filename}`;
+        return `/api/uploads/${filename}`;
       }),
     );
 

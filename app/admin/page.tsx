@@ -127,7 +127,7 @@ export default function AdminPage() {
       const uploadedUrls = await uploadImageFiles(files);
       setDraft((d) => ({
         ...d,
-        backgroundImages: [...d.backgroundImages, ...uploadedUrls],
+        backgroundImages: [...uploadedUrls, ...d.backgroundImages],
       }));
     } catch (err) {
       setUploadError(
@@ -487,13 +487,16 @@ export default function AdminPage() {
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {draft.backgroundImages.map((url, i) => {
-                const isUploaded = url.startsWith('data:') || url.startsWith('/uploads/');
+                const isUploaded =
+                  url.startsWith('data:') ||
+                  url.startsWith('/uploads/') ||
+                  url.startsWith('/api/uploads/');
                 return (
                   <div key={i} className="glass-soft rounded-2xl p-3 flex flex-col gap-3">
                     <div
                       className="h-32 rounded-xl bg-white/5 bg-cover bg-center border border-white/10 relative"
                       style={{
-                        backgroundImage: url ? `url(${url})` : 'none',
+                        backgroundImage: url ? `url(${JSON.stringify(url)})` : 'none',
                       }}
                     >
                       {!url && (
