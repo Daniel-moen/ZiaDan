@@ -1,15 +1,15 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
+import {
+  LEGACY_PUBLIC_UPLOAD_DIR,
+  LEGACY_UPLOAD_DIR,
+  UPLOAD_DIR,
+  ensureStorageReady,
+} from '@/lib/serverStorage';
 
 export const dynamic = 'force-dynamic';
 
-const UPLOAD_DIR = path.join(/*turbopackIgnore: true*/ process.cwd(), 'data', 'uploads');
-const LEGACY_UPLOAD_DIR = path.join(
-  /*turbopackIgnore: true*/ process.cwd(),
-  'public',
-  'uploads',
-);
 const CONTENT_TYPES: Record<string, string> = {
   avif: 'image/avif',
   gif: 'image/gif',
@@ -33,6 +33,7 @@ export async function GET(
   }
 
   try {
+    await ensureStorageReady();
     const filepath = await findUploadPath(filename);
     const file = await fs.readFile(filepath);
     const ext = path.extname(filename).slice(1).toLowerCase();
@@ -52,6 +53,7 @@ async function findUploadPath(filename: string): Promise<string> {
   const paths = [
     path.join(UPLOAD_DIR, filename),
     path.join(LEGACY_UPLOAD_DIR, filename),
+    path.join(LEGACY_PUBLIC_UPLOAD_DIR, filename),
   ];
 
   for (const filepath of paths) {

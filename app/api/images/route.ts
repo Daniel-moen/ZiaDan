@@ -2,9 +2,9 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
+import { UPLOAD_DIR, ensureStorageReady } from '@/lib/serverStorage';
 
 export const dynamic = 'force-dynamic';
-const UPLOAD_DIR = path.join(/*turbopackIgnore: true*/ process.cwd(), 'data', 'uploads');
 const MIME_EXTENSIONS: Record<string, string> = {
   'image/avif': 'avif',
   'image/gif': 'gif',
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     if (files.length === 0) {
       return NextResponse.json({ error: 'No images were uploaded.' }, { status: 400 });
     }
-
+    await ensureStorageReady();
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
 
     const urls = await Promise.all(

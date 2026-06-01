@@ -13,8 +13,8 @@ A gorgeous Next.js countdown that runs in your browser. Two countdowns in one:
   skylines, the two of you).
 - `/admin` page to change everything live (dates, names, messages, images,
   password). Includes its own live preview countdown.
-- All settings are stored in the browser's `localStorage`, so no server is
-  required.
+- Shared server-side settings and uploaded background photos so everyone sees
+  the same countdown.
 
 ## Run it
 
@@ -32,19 +32,47 @@ on the Security card).
 
 ## Deploy
 
-Any Next.js host works (Vercel, Netlify, your own server):
+Use a Next.js host with persistent disk if you want uploaded photos to survive
+updates:
 
 ```sh
 npm run build
 npm run start
 ```
 
-For Vercel: push to a repo and import — zero config.
+Serverless hosts can run the app, but they need external image/config storage
+instead of the built-in file-backed storage.
+
+## Persistent storage
+
+Uploaded photos and shared settings must live outside the app checkout so they
+survive updates/redeploys.
+
+By default, the app stores runtime data in:
+
+```sh
+~/.zia-dan
+```
+
+You can override this with:
+
+```sh
+ZIA_DAN_STORAGE_DIR=/path/to/persistent/zia-dan-storage
+```
+
+Keep this folder mounted/backed up across app updates. It contains:
+
+- `config.json` — shared countdown/admin/background settings.
+- `uploads/` — uploaded background image files.
+
+If you deploy with Docker, Coolify, Railway volumes, or another persistent disk,
+mount that persistent folder and set `ZIA_DAN_STORAGE_DIR` to the mounted path.
+Do not use a folder inside the app release/build directory for persistent
+storage.
 
 ## Notes
 
-- Settings live in the browser only. If you want both of you to see the same
-  countdown, host it once and share the URL — anyone who opens it will use
-  the *server-default* dates until they change them locally. (Hard-code the
-  defaults in `lib/config.ts` if you want them shared by all visitors.)
+- File-backed storage is meant for a persistent Node server. Serverless hosts
+  like Vercel do not reliably persist runtime file uploads; use object storage
+  such as S3, Cloudinary, UploadThing, or a database-backed file store there.
 - The "Admin" link in the top-right of the home page goes to `/admin`.

@@ -7,3 +7,4 @@ out
 next-env.d.ts
 data/config.json
 data/uploads/
+.zia-dan/
