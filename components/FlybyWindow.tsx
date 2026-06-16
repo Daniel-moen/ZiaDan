@@ -38,35 +38,37 @@ export default function FlybyWindow({ label, startIso, endIso }: Props) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.9, delay: 0.4 }}
-      className="glass rounded-3xl p-6 md:p-8 w-full max-w-3xl mx-auto"
+      className="glass-soft rounded-3xl p-6 md:p-8 w-full max-w-3xl mx-auto"
     >
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl animate-heart-beat">✈️</span>
+        <div className="flex items-center gap-4">
+          <span className="text-2xl md:text-3xl animate-heart-beat drop-shadow-[0_4px_14px_rgba(255,143,176,0.6)]">
+            ✈️
+          </span>
           <div>
-            <div className="font-display text-2xl md:text-3xl text-white">
+            <div className="text-[10px] kicker text-rose-glow/70 mb-1" style={{ letterSpacing: '0.4em' }}>
               {label}
             </div>
-            <div className="text-white/60 text-sm font-serif italic">
+            <div className="text-white/65 text-sm font-serif italic">
               {startLabel} &rarr; {endLabel}
             </div>
           </div>
         </div>
 
         <div className="text-right">
-          <div className="text-[10px] uppercase tracking-[0.3em] text-white/55">
+          <div className="text-[10px] kicker text-white/45" style={{ letterSpacing: '0.3em' }}>
             {!mounted
               ? 'Window'
               : beforeWindow
-              ? 'Window opens in'
+              ? 'Opens in'
               : inWindow
-              ? 'Window closes in'
+              ? 'Closes in'
               : 'Window closed'}
           </div>
-          <div className="font-display text-xl text-rose-glow">
+          <div className="font-display text-xl md:text-2xl gradient-text">
             {!mounted
               ? '—'
               : parts.isPast && afterWindow
@@ -79,8 +81,8 @@ export default function FlybyWindow({ label, startIso, endIso }: Props) {
       </div>
 
       {/* Progress bar */}
-      <div className="mt-6">
-        <div className="relative h-2.5 rounded-full overflow-hidden bg-white/8 border border-white/10">
+      <div className="mt-7">
+        <div className="relative h-2 rounded-full overflow-hidden bg-white/[0.07] border border-white/10">
           <motion.div
             initial={{ width: 0 }}
             animate={{
@@ -90,8 +92,8 @@ export default function FlybyWindow({ label, startIso, endIso }: Props) {
             className="absolute inset-y-0 left-0 rounded-full"
             style={{
               background:
-                'linear-gradient(90deg, #ff8fb1 0%, #c1184c 60%, #a855f7 100%)',
-              boxShadow: '0 0 22px rgba(255,143,177,0.6)',
+                'linear-gradient(90deg, #ffcf9e 0%, #ff8fb0 50%, #e0436b 100%)',
+              boxShadow: '0 0 22px rgba(255,143,176,0.7)',
             }}
           />
           {/* Plane marker */}
@@ -100,21 +102,21 @@ export default function FlybyWindow({ label, startIso, endIso }: Props) {
               initial={{ left: '0%' }}
               animate={{ left: `${progress * 100}%` }}
               transition={{ duration: 1.2, ease: 'easeOut' }}
-              className="absolute -top-3 -translate-x-1/2"
+              className="absolute -top-3 -translate-x-1/2 text-sm"
               style={{ textShadow: '0 4px 10px rgba(0,0,0,0.5)' }}
             >
               ✈️
             </motion.div>
           )}
         </div>
-        <div className="flex justify-between mt-2 text-[11px] uppercase tracking-[0.25em] text-white/55">
+        <div className="flex justify-between mt-2.5 text-[10px] kicker text-white/45" style={{ letterSpacing: '0.22em' }}>
           <span>{startLabel}</span>
           <span>{endLabel}</span>
         </div>
       </div>
 
       {/* Mini countdown */}
-      <div className="mt-6 flex justify-center">
+      <div className="mt-7 flex justify-center">
         <Countdown
           target={targetIso}
           size="sm"

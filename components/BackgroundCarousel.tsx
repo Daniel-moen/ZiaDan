@@ -33,33 +33,68 @@ export default function BackgroundCarousel({ images, intervalMs = 9000 }: Props)
         {current ? (
           <motion.div
             key={current + index}
-            initial={{ opacity: 0, scale: 1.08 }}
-            animate={{ opacity: 1, scale: 1.0 }}
-            exit={{ opacity: 0, scale: 1.02 }}
-            transition={{ duration: 2.2, ease: 'easeInOut' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2.4, ease: 'easeInOut' }}
             className="absolute inset-0"
           >
+            {/* blurred fill behind, so portrait shots never letterbox awkwardly */}
             <div
-              className="absolute inset-0 bg-cover bg-center blur-2xl scale-110 opacity-70 md:hidden"
+              className="absolute inset-0 bg-cover bg-center scale-125 blur-3xl opacity-60"
               style={{
                 backgroundImage: `url(${JSON.stringify(current)})`,
-                filter: 'brightness(88%) saturate(115%) contrast(105%)',
+                filter: 'brightness(70%) saturate(120%)',
               }}
             />
             <div
-              className="background-carousel-image absolute inset-0"
+              className="background-carousel-image absolute inset-0 animate-kenburns"
               style={{
                 backgroundImage: `url(${JSON.stringify(current)})`,
-                filter: 'brightness(88%) saturate(115%) contrast(105%)',
+                filter: 'brightness(82%) saturate(118%) contrast(106%)',
               }}
             />
           </motion.div>
         ) : null}
       </AnimatePresence>
 
-      {/* Subtle Ken-Burns drift */}
-      <div className="absolute inset-0 pointer-events-none aurora" />
-      <div className="absolute inset-0 pointer-events-none vignette" />
+      {/* Animated aurora atmosphere */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="aurora-blob animate-aurora-1"
+          style={{
+            width: '52vw',
+            height: '52vw',
+            top: '-12vw',
+            left: '-8vw',
+            background: 'radial-gradient(circle, rgba(255, 143, 176, 0.55), transparent 65%)',
+          }}
+        />
+        <div
+          className="aurora-blob animate-aurora-2"
+          style={{
+            width: '46vw',
+            height: '46vw',
+            bottom: '-14vw',
+            right: '-6vw',
+            background: 'radial-gradient(circle, rgba(255, 207, 158, 0.4), transparent 65%)',
+          }}
+        />
+        <div
+          className="aurora-blob animate-aurora-3"
+          style={{
+            width: '38vw',
+            height: '38vw',
+            top: '30%',
+            left: '55%',
+            opacity: 0.35,
+            background: 'radial-gradient(circle, rgba(168, 85, 247, 0.45), transparent 65%)',
+          }}
+        />
+      </div>
+
+      {/* Cinematic scrim for legibility + depth */}
+      <div className="absolute inset-0 pointer-events-none bg-scrim" />
     </div>
   );
 }
